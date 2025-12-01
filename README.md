@@ -67,4 +67,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
-This project is proprietary. All rights reserved © 2024 TechProjectHub.
+This project is proprietary. All rights reserved © 2025 TechProjectHub.
