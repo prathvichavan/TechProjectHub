@@ -133,14 +133,10 @@ const Login = () => {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                             <Button variant="outline" onClick={() => handleOAuthLogin("google")} disabled={loading}>
                                 <GoogleIcon className="mr-2 h-4 w-4" />
                                 Google
-                            </Button>
-                            <Button variant="outline" onClick={() => handleOAuthLogin("github")} disabled={loading}>
-                                <Github className="mr-2 h-4 w-4" />
-                                GitHub
                             </Button>
                         </div>
 
