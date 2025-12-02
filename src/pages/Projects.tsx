@@ -13,7 +13,7 @@ const Projects = () => {
 
   // Read category from URL
   const [selectedCategory, setSelectedCategory] = useState<string>(
-    searchParams.get("category") || "All Projects"
+    searchParams.get("category") || "all"
   );
 
   // Sync URL with state
@@ -29,28 +29,33 @@ const Projects = () => {
    * Power Bi | Machine Learning | Deep Learning
    */
   const categories = [
-    { value: "All Projects", label: "All Projects" },
-    { value: "Power Bi", label: "Power BI" },
-    { value: "Machine Learning", label: "Machine Learning" },
-    { value: "Deep Learning", label: "Deep Learning" },
-    {value: "Website Development", label: "Website Development" },
-    {value: "Cloud Based", label: "Cloud Based" }
+    { value: "all", label: "All Projects" },
+    { value: "powerbi", label: "Power BI" },
+    { value: "machinelearning", label: "Machine Learning" },
+    { value: "deeplearning", label: "Deep Learning" },
+    { value: "websitedevelopment", label: "Website Development" },
+    { value: "cloudbased", label: "Cloud Based" }
   ];
+
+  // Helper to normalize category strings to slugs
+  const normalizeCategory = (cat: string) => {
+    return cat.toLowerCase().replace(/\s+/g, "").replace(/-/g, "");
+  };
 
   // Correct filtering
   const filteredProjects =
-    selectedCategory === "All Projects"
+    selectedCategory === "all" || selectedCategory === "All Projects"
       ? projects
       : projects.filter(
-          (p) =>
-            p.category &&
-            p.category.toLowerCase() === selectedCategory.toLowerCase()
-        );
+        (p) =>
+          p.category &&
+          normalizeCategory(p.category) === normalizeCategory(selectedCategory)
+      );
 
   // Category button click handler
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    if (category === "All Projects") {
+    if (category === "all") {
       setSearchParams({});
     } else {
       setSearchParams({ category });

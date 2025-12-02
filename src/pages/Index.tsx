@@ -40,7 +40,7 @@ const Index = () => {
       title: "Website Projects",
       description: "Full-stack web applications and templates",
       icon: webIcon,
-      category: "Web Development"
+      category: "Website Development"
     }
   ];
 
