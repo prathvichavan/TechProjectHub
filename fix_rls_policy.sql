@@ -9,7 +9,11 @@ DROP POLICY IF EXISTS "Allow anonymous inserts" ON messages;
 
 CREATE POLICY "Allow anonymous inserts" ON messages
   FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (true)
+  
+  
+  
+  ;
 
 -- 3. (Optional) Allow you (authenticated admins) to view the messages
 DROP POLICY IF EXISTS "Allow authenticated read" ON messages;

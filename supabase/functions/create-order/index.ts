@@ -40,12 +40,20 @@ serve(async (req) => {
 
         const order = await razorpay.orders.create(options)
 
+        // Get the user from the auth context
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+
+        if (userError || !user) {
+            throw new Error("User not authenticated")
+        }
+
         // Store in Supabase
         const { data, error } = await supabaseClient
             .from('orders')
             .insert([
                 {
                     project_id: projectId,
+                    user_id: user.id,
                     razorpay_order_id: order.id,
                     amount: amount,
                     status: 'created'
