@@ -82,11 +82,12 @@ serve(async (req) => {
         )
     } catch (error) {
         console.error("Error creating order:", error);
+        // Return 200 even on error so the client can read the error message easily
         return new Response(
-            JSON.stringify({ error: error.message }),
+            JSON.stringify({ error: error.message || "Unknown error occurred" }),
             {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                status: 400,
+                status: 200,
             }
         )
     }
