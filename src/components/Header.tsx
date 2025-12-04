@@ -37,6 +37,9 @@ const Header = () => {
             <Link to="/contact" className="text-sm font-medium text-foreground hover:text-primary transition-all duration-300 hover:scale-110 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-primary after:transition-all after:duration-300">
               Contact
             </Link>
+            <Link to="/blog" className="text-sm font-medium text-foreground hover:text-primary transition-all duration-300 hover:scale-110 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-primary after:transition-all after:duration-300">
+              Blog
+            </Link>
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">
@@ -101,6 +104,13 @@ const Header = () => {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Contact
+              </Link>
+              <Link
+                to="/blog"
+                className="text-sm font-medium text-foreground hover:text-primary transition-all duration-300 hover:translate-x-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Blog
               </Link>
               <div className="pt-4 space-y-2">
                 {session ? (

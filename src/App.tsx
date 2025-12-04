@@ -14,6 +14,8 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Refund from "./pages/Refund";
 import About from "./pages/About";
+import Blog from "./pages/Blog";
+import BlogArticle from "./pages/BlogArticle";
 
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -46,6 +48,8 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/refund" element={<Refund />} />
             <Route path="/about" element={<About />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogArticle />} />
 
             {/* Auth Routes */}
             <Route path="/auth/login" element={<Login />} />
