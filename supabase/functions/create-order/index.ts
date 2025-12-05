@@ -25,11 +25,19 @@ serve(async (req) => {
             { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
         )
 
+        const keyId = Deno.env.get('RAZORPAY_KEY_ID');
+        const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+
+        if (!keyId || !keySecret) {
+            console.error("Missing Razorpay Keys");
+            throw new Error("Server configuration error: Razorpay keys are missing in Supabase secrets.");
+        }
+
         const { amount, projectId } = await req.json()
 
         const razorpay = new Razorpay({
-            key_id: Deno.env.get('RAZORPAY_KEY_ID'),
-            key_secret: Deno.env.get('RAZORPAY_KEY_SECRET'),
+            key_id: keyId,
+            key_secret: keySecret,
         })
 
         const options = {
@@ -72,7 +80,7 @@ serve(async (req) => {
                 orderId: order.id,
                 amount: order.amount,
                 currency: order.currency,
-                key: Deno.env.get('RAZORPAY_KEY_ID'),
+                key: keyId,
                 dbOrderId: data.id
             }),
             {
@@ -80,11 +88,25 @@ serve(async (req) => {
                 status: 200,
             }
         )
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error creating order:", error);
         // Return 200 even on error so the client can read the error message easily
+        // Try to extract the most useful message
+        let errorMessage = "Unknown error occurred";
+        if (error instanceof Error) {
+            errorMessage = error.message;
+        } else if (typeof error === 'string') {
+            errorMessage = error;
+        } else {
+            try {
+                errorMessage = JSON.stringify(error);
+            } catch (e) {
+                errorMessage = "Error object could not be stringified";
+            }
+        }
+
         return new Response(
-            JSON.stringify({ error: error.message || "Unknown error occurred" }),
+            JSON.stringify({ error: errorMessage }),
             {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
                 status: 200,

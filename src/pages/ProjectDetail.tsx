@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { supabase } from "@/integrations/supabase/client";
 import PaymentDialog from "@/components/PaymentDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,29 @@ const ProjectDetail = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
   const { toast } = useToast();
+  const [hasPurchased, setHasPurchased] = useState(false);
+
+  useEffect(() => {
+    const checkPurchaseStatus = async () => {
+      if (!session?.user) return;
+
+      const { data } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('project_id', id)
+        .eq('status', 'paid')
+        .maybeSingle();
+
+      if (data) {
+        setHasPurchased(true);
+      }
+    };
+
+    if (project) {
+      checkPurchaseStatus();
+    }
+  }, [session, id, project]);
 
   const handleBuyNow = () => {
     if (!session) {
@@ -171,13 +195,26 @@ const ProjectDetail = () => {
               </div>
 
               <div className="space-y-3 mb-6">
-                <Button
-                  size="lg"
-                  className="w-full shadow-primary"
-                  onClick={handleBuyNow}
-                >
-                  Buy Now
-                </Button>
+                {hasPurchased ? (
+                  <Button
+                    size="lg"
+                    className="w-full shadow-primary bg-green-600 hover:bg-green-700"
+                    asChild
+                  >
+                    <Link to={`/download/${project.id}`}>
+                      <Package className="mr-2 h-5 w-5" />
+                      Download Now
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    size="lg"
+                    className="w-full shadow-primary"
+                    onClick={handleBuyNow}
+                  >
+                    Buy Now
+                  </Button>
+                )}
                 <Button asChild size="lg" variant="outline" className="w-full">
                   <Link to="/contact">Request Custom Project</Link>
                 </Button>
