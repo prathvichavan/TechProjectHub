@@ -22,15 +22,17 @@ const DownloadPage = () => {
 
             try {
                 // 1. Check for paid order
-                const { data: order, error: orderError } = await supabase
+                const { data: orders, error: orderError } = await supabase
                     .from("orders")
                     .select("*")
                     .eq("project_id", id)
                     .eq("user_id", user.id)
                     .eq("status", "paid") // Ensure we check for 'paid' status
-                    .maybeSingle();
+                    .limit(1);
 
                 if (orderError) throw orderError;
+
+                const order = orders?.[0];
 
                 if (order) {
                     setHasAccess(true);
@@ -44,9 +46,9 @@ const DownloadPage = () => {
                     if (projectError) throw projectError;
                     setProject(projectData);
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Access check failed:", error);
-                toast.error("Failed to verify purchase.");
+                toast.error(`Failed to verify purchase: ${error.message || "Unknown error"}`);
             } finally {
                 setVerifying(false);
             }
