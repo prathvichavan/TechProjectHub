@@ -9,9 +9,17 @@ CREATE TABLE IF NOT EXISTS downloads (
 -- Enable RLS
 ALTER TABLE downloads ENABLE ROW LEVEL SECURITY;
 
--- Policy: Users can view their own downloads (optional, but good practice)
-CREATE POLICY "Users can view their own downloads" ON downloads
-  FOR SELECT USING (auth.email() = user_email);
+-- Policy: Users can view their own downloads
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'downloads' AND policyname = 'Users can view their own downloads'
+    ) THEN
+        CREATE POLICY "Users can view their own downloads" ON downloads
+          FOR SELECT USING (auth.email() = user_email);
+    END IF;
+END
+$$;
 
 -- Create storage bucket 'project-files' if not exists
 INSERT INTO storage.buckets (id, name, public)
@@ -19,9 +27,28 @@ VALUES ('project-files', 'project-files', true)
 ON CONFLICT (id) DO UPDATE SET public = true;
 
 -- Policy: Public read access to project-files
-CREATE POLICY "Public Access" ON storage.objects
-  FOR SELECT USING (bucket_id = 'project-files');
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Public Access'
+    ) THEN
+        CREATE POLICY "Public Access" ON storage.objects
+          FOR SELECT USING (bucket_id = 'project-files');
+    END IF;
+END
+$$;
 
--- Allow authenticated users to upload to project-files (for admin/testing purposes)
-CREATE POLICY "Authenticated users can upload" ON storage.objects
-  FOR INSERT TO authenticated WITH CHECK (bucket_id = 'project-files');
+-- Policy: Authenticated users can upload
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Authenticated users can upload'
+    ) THEN
+        CREATE POLICY "Authenticated users can upload" ON storage.objects
+          FOR INSERT TO authenticated WITH CHECK (bucket_id = 'project-files');
+    END IF;
+END
+$$;
+
+-- Add files_uploaded column to projects table
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS files_uploaded BOOLEAN DEFAULT FALSE;

@@ -40,12 +40,12 @@ const Admin = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const uploadFile = async (file: File, bucket: string, path: string) => {
+  const uploadFile = async (file: File, bucket: string, path: string, upsert = false) => {
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(path, file, {
         cacheControl: '3600',
-        upsert: false
+        upsert: upsert
       });
 
     if (error) throw error;
@@ -82,31 +82,49 @@ const Admin = () => {
     setUploadProgress(10);
 
     try {
-      // Upload thumbnail
+      // 1. Upload thumbnail first (we can keep this as is, or move it after project creation if we want strict folder structure for thumbnails too, but user only specified project files)
       const thumbnailPath = `thumbnails/${Date.now()}_${thumbnailFile.name}`;
       const thumbnailUrl = await uploadFile(thumbnailFile, "project-thumbnails", thumbnailPath);
-      setUploadProgress(40);
+      setUploadProgress(30);
 
-      // Upload ZIP file
-      const zipPath = `projects/${Date.now()}_${zipFile.name}`;
-      const zipUrl = await uploadFile(zipFile, "project-files", zipPath);
-      setUploadProgress(70);
-
-      // Insert project into database
-      const { error: insertError } = await supabase
+      // 2. Insert project into database (initially with empty zip_url)
+      const { data: projectData, error: insertError } = await supabase
         .from("projects")
         .insert({
           title: formData.title,
           short_description: formData.short_description,
           full_description: formData.full_description,
           price: parseFloat(formData.price),
-          category: formData.category, // Exact category string
+          category: formData.category,
           thumbnail_url: thumbnailUrl,
-          zip_url: zipUrl,
-          admin_id: "00000000-0000-0000-0000-000000000000" // Placeholder
-        });
+          zip_url: "", // Will update this after upload
+          admin_id: "00000000-0000-0000-0000-000000000000"
+        })
+        .select()
+        .single();
 
       if (insertError) throw insertError;
+      if (!projectData) throw new Error("Failed to create project record");
+
+      setUploadProgress(50);
+
+      // 3. Upload ZIP file to project-files/<project_id>/project.zip
+      const zipPath = `${projectData.id}/project.zip`;
+      // Force upsert = true to replace existing file if any
+      const zipUrl = await uploadFile(zipFile, "project-files", zipPath, true);
+
+      setUploadProgress(80);
+
+      // 4. Update project with zip_url and files_uploaded = true
+      const { error: updateError } = await supabase
+        .from("projects")
+        .update({
+          zip_url: zipUrl,
+          files_uploaded: true
+        })
+        .eq("id", projectData.id);
+
+      if (updateError) throw updateError;
 
       setUploadProgress(100);
 
@@ -128,6 +146,7 @@ const Admin = () => {
       setUploadProgress(0);
 
     } catch (error: any) {
+      console.error("Upload error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to upload project",
