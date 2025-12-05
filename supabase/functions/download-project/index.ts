@@ -43,10 +43,30 @@ serve(async (req) => {
             )
         }
 
+        // Log the download
+        const { error: logError } = await supabaseClient
+            .from('downloads')
+            .insert({
+                project_id: projectId,
+                user_email: user.email,
+                created_at: new Date().toISOString()
+            });
+
+        if (logError) {
+            console.error("Error logging download:", logError);
+            // We don't block the download if logging fails, but it's good to know
+        }
+
         // Generate Public URL
+        // The user specifically requested the path: project-files/project-files/{projectId}/project.zip
+        // Since we are calling .from('project-files'), we need to append the rest of the path.
+        // However, based on standard Supabase behavior, .from('bucket') + .getPublicUrl('path') results in .../bucket/path
+        // The user wants .../project-files/project-files/... which implies a folder named 'project-files' INSIDE the bucket 'project-files'.
+        // We will respect the user's explicit request for the double 'project-files' in the URL structure.
+
         const { data } = supabaseClient.storage
             .from('project-files')
-            .getPublicUrl(`${projectId}/project.zip`)
+            .getPublicUrl(`project-files/${projectId}/project.zip`)
 
         return new Response(
             JSON.stringify({ url: data.publicUrl }),
