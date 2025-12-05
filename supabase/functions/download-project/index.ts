@@ -23,22 +23,25 @@ serve(async (req) => {
         const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
         if (userError || !user) throw new Error('Unauthorized')
 
-        // Check downloads table
-        const { data: download, error: downloadError } = await supabaseClient
-            .from('downloads')
+        // Check orders table for a paid order
+        // We use 'orders' as the source of truth for purchase
+        const { data: order, error: orderError } = await supabaseClient
+            .from('orders')
             .select('*')
             .eq('project_id', projectId)
-            .eq('user_email', user.email)
+            .eq('user_id', user.id)
+            .eq('status', 'paid')
+            .limit(1)
             .maybeSingle()
 
-        if (downloadError) {
-            console.error("Download check error:", downloadError);
-            throw new Error("Error checking download permissions");
+        if (orderError) {
+            console.error("Order check error:", orderError);
+            throw new Error("Error checking purchase status");
         }
 
-        if (!download) {
+        if (!order) {
             return new Response(
-                JSON.stringify({ error: 'You do not own this project' }),
+                JSON.stringify({ error: 'You have not purchased this project' }),
                 { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
         }
